@@ -1,13 +1,10 @@
-import numpy as np
+
 import pandas as pd
 from pathlib import Path
-
-from matplotlib import pyplot
-from numpy import mean, std
+from matplotlib import pyplot as plt
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.feature_selection import RFE
-from sklearn.model_selection import RepeatedStratifiedKFold, cross_val_score
-from sklearn.pipeline import Pipeline
+from sklearn.feature_selection import RFECV
+from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import LabelEncoder
 
 
@@ -30,36 +27,34 @@ def feat_sel():
     return pd.concat(data, axis=0), pd.concat(labels)
 
 
-# get a list of models to evaluate
-def get_models():
-    models = dict()
-    for i in np.arange(start=10, stop=100, step=10):
-        rfe = RFE(estimator=RandomForestClassifier(n_jobs=-1), n_features_to_select=i)
-        model = RandomForestClassifier(n_jobs=-1)
-        models[str(i)] = Pipeline(steps=[('s', rfe), ('m', model)])
-    return models
-
-
-# evaluate a given model using cross-validation
-def evaluate_model(model, X, y):
-    cv = RepeatedStratifiedKFold(n_splits=5, n_repeats=3, random_state=1)
-    scores = cross_val_score(model, X, y, scoring='accuracy', cv=cv, n_jobs=-1, error_score='raise')
-    return scores
-
-
 if __name__ == '__main__':
     data, labels = feat_sel()
     data = data.dropna(axis=1, inplace=False)
     labels = LabelEncoder().fit_transform(labels.to_numpy())
 
-    models = get_models()
+    # Create the RFE object and compute a cross-validated score.
+    rf = RandomForestClassifier(n_jobs=-1)
+    # The "accuracy" scoring shows the proportion of correct classifications
 
-    results, names = list(), list()
-    for name, model in models.items():
-        scores = evaluate_model(model, data, labels)
-        results.append(scores)
-        names.append(name)
-        print('>%s %.3f (%.3f)' % (name, mean(scores), std(scores)))
-    # plot model performance for comparison
-    pyplot.boxplot(results, labels=names, showmeans=True)
-    pyplot.show()
+    min_features_to_select = 10  # Minimum number of features to consider
+    rfecv = RFECV(
+        estimator=rf,
+        step=1,
+        cv=StratifiedKFold(5),
+        scoring="accuracy",
+        min_features_to_select=min_features_to_select,
+        n_jobs=-1
+    )
+    rfecv.fit(data, labels)
+
+    print("Optimal number of features : %d" % rfecv.n_features_)
+
+    # Plot number of features VS. cross-validation scores
+    plt.figure()
+    plt.xlabel("Number of features selected")
+    plt.ylabel("Cross validation score (accuracy)")
+    plt.plot(
+        range(min_features_to_select, len(rfecv.grid_scores_) + min_features_to_select),
+        rfecv.grid_scores_,
+    )
+    plt.show()
