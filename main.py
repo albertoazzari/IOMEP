@@ -54,18 +54,7 @@ class IOMEP:
         return df_fe.dropna(axis=1, inplace=False)
 
     def __compute_fs(self, subject):
-        path = Path('fs.csv')
-        if not path.is_file():
-            data = pd.concat(self.data, axis=0)
-            data.columns = [*data.columns[:-1], 'labels']
-            X_train, X_test, y_train, y_test = train_test_split(data[data.columns[:-1]], data['labels'].to_numpy(), test_size=0.33, random_state=42)
-            sel = SelectFromModel(RandomForestClassifier(n_estimators=1000))
-            sel.fit(X_train, y_train)
-            selected_feat = pd.Series(X_train.columns[(sel.get_support())])
-            selected_feat.to_csv()
-        else:
-            selected_feat = pd.read_csv(path)
-        return subject[selected_feat.to_numpy()]
+        pass
 
 
 if __name__ == '__main__':
