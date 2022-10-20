@@ -1,16 +1,25 @@
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.svm import SVC
+from sklearn.svm import SVC, LinearSVC
 from sklearn.ensemble import RandomForestClassifier
+
+clf_names = [
+             "NN",
+             "KNN",
+             "LIN SVM",
+             "RBF SVM",
+             "RF"
+             ]
 
 
 class Model:
     def __init__(self):
-        self.models = []
-        self.models.append(KNeighborsClassifier(n_neighbors=1, metric='seuclidean'))
-        self.models.append(KNeighborsClassifier(n_neighbors=10, metric='seuclidean'))
-        self.models.append(SVC(kernel='linear'))
-        self.models.append(SVC(kernel='rbf'))
-        self.models.append(RandomForestClassifier())
+        self.classifiers = [
+            KNeighborsClassifier(n_neighbors=1, metric='euclidean'),
+            KNeighborsClassifier(n_neighbors=10, metric='euclidean'),
+            LinearSVC(),
+            SVC(),
+            RandomForestClassifier(oob_score=True)
+        ]
 
     def get_models(self):
-        return self.models
+        return clf_names, self.classifiers
