@@ -102,11 +102,12 @@ class Representation:
     def build_stacked_df(reps):
         data = np.vstack([np.vstack(reps['dcs']['raw']), np.vstack(reps['tcs']['raw'])])
         labels = np.hstack([np.hstack(reps['dcs']['labels']), np.hstack(reps['tcs']['labels'])])
-        df = pd.DataFrame()
+
+        stacked_data = []
         for ((i, ts), label) in zip(enumerate(data), labels):
             x = [[x, i, label] for x in ts]
-            df = df.append(x, ignore_index=True)
-        df.columns = ['value', 'id', 'kind']
+            stacked_data.append(x)
+        df = pd.DataFrame(np.vstack(stacked_data), columns = ['value', 'id', 'kind'])
         return df
 
     @staticmethod
